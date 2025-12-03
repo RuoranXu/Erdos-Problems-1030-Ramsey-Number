@@ -3,8 +3,7 @@
 The Ramsey number is one of the important functions in graph theory.
 Code mainly fouces on lower bound estimation and proportional convergence.
 
-If $R(k,l)$ is the Ramsey number then Prove that there exists a constant \(c>0\) such that\(> \lim_{k\to\infty} \frac{R(k+1,k)}{R(k,k)} > 1+c.
->\)
+If $R(k,l)$ is the Ramsey number then prove the existence of some $c>0$ such that\[\lim_k \frac{R(k+1,k)}{R(k,k)}> 1+c.\]
 
 A problem of Erd\H{o}s and S\'{o}s, who could not even prove whether $R(k+1,k)-R(k,k)>k^c$ for any $c>1$.
 It is trivial that $R(k+1,k)-R(k,k)\geq k-2$. Burr, Erd\H{o}s, Faudree, and Shelp \cite{BEFS89} proved\[R(k+1,k)-R(k,k)\geq 2k-5.\]
