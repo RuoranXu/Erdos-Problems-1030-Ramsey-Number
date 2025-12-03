@@ -4,32 +4,18 @@ open scoped Real
 open scoped Nat
 open scoped Classical
 open scoped Pointwise
-set_option maxHeartbeats 0
-set_option maxRecDepth 4000
-set_option synthInstance.maxHeartbeats 20000
-set_option synthInstance.maxSize 128
 set_option relaxedAutoImplicit false
 set_option autoImplicit false
 
-noncomputable section
-
-/-
-Definition of Ramsey number R(k, l) as the smallest n such that every graph on n vertices has a k-clique or an l-independent set.
--/
 open SimpleGraph Filter Topology
 
-/-- `IsRamsey n k l` means that every graph on `n` vertices has a clique of size `k`
-or an independent set of size `l`. -/
+
 def IsRamsey (n k l : ℕ) : Prop :=
   ∀ (G : SimpleGraph (Fin n)), (∃ s, G.IsNClique k s) ∨ (∃ t, G.IsNIndepSet l t)
 
-/-- The Ramsey number `R(k, l)` is the smallest `n` such that `IsRamsey n k l` holds. -/
 noncomputable def R (k l : ℕ) : ℕ :=
   sInf {n | IsRamsey n k l}
 
-/-
-Ramsey's theorem: for any k, l ≥ 1, there exists an n such that any graph on n vertices has a k-clique or an l-independent set.
--/
 theorem R_well_defined (k l : ℕ) (hk : k ≥ 1) (hl : l ≥ 1) : ∃ n, IsRamsey n k l := by
   -- We proceed by induction on $k + l$.
   induction' k using Nat.strong_induction_on with k ih generalizing l;
@@ -107,11 +93,6 @@ theorem R_well_defined (k l : ℕ) (hk : k ≥ 1) (hl : l ≥ 1) : ∃ n, IsRams
         simp_all +decide [ Set.Pairwise, Finset.card_insert_of_notMem ];
         exact ⟨ fun x hx => by simpa [ SimpleGraph.adj_comm ] using left hx |>.2, by rw [ Finset.card_insert_of_notMem ( fun hx => by simpa [ left hx ] using left hx |>.1 ), h_1.2 ] ⟩
 
-/-
-Definition of the join of two graphs.
--/
-/-- The join of two graphs `G` and `H` is the graph on `α ⊕ β` where vertices in `G` are adjacent
-to vertices in `H`, and edges within `G` and `H` are preserved. -/
 def SimpleGraph.join {α β : Type*} (G : SimpleGraph α) (H : SimpleGraph β) : SimpleGraph (α ⊕ β) where
   Adj x y := match x, y with
     | Sum.inl u, Sum.inl v => G.Adj u v
@@ -132,23 +113,15 @@ def SimpleGraph.join {α β : Type*} (G : SimpleGraph α) (H : SimpleGraph β) :
 
 infixl:60 " ⊕j " => SimpleGraph.join
 
-/-
-Checking types of Finset.preimage and Function.Injective.injOn
--/
 #check Finset.preimage
 #check Function.Injective.injOn
 
-/-
-Characterization of cliques in the join of two graphs.
--/
 theorem join_clique_iff {α β : Type*} (G : SimpleGraph α) (H : SimpleGraph β) (s : Finset (α ⊕ β)) :
     (G ⊕j H).IsClique s ↔ (G.IsClique (s.preimage Sum.inl Sum.inl_injective.injOn)) ∧
                            (H.IsClique (s.preimage Sum.inr Sum.inr_injective.injOn)) := by
   simp +decide [ Set.Pairwise, SimpleGraph.join ]
 
-/-
-Characterization of independent sets in the join of two graphs.
--/
+
 theorem join_indep_iff {α β : Type*} (G : SimpleGraph α) (H : SimpleGraph β) (s : Finset (α ⊕ β)) :
     (G ⊕j H).IsIndepSet s ↔ (s.preimage Sum.inr Sum.inr_injective.injOn = ∅ ∧ G.IsIndepSet (s.preimage Sum.inl Sum.inl_injective.injOn)) ∨
                              (s.preimage Sum.inl Sum.inl_injective.injOn = ∅ ∧ H.IsIndepSet (s.preimage Sum.inr Sum.inr_injective.injOn)) := by
@@ -172,9 +145,6 @@ theorem join_indep_iff {α β : Type*} (G : SimpleGraph α) (H : SimpleGraph β)
     · simp_all +decide [ Finset.ext_iff, Set.insert_subset_iff ];
       intro x hx y hy hxy; cases x <;> cases y <;> aesop;
 
-/-
-R(k, l) is the smallest number satisfying the Ramsey property.
--/
 theorem R_spec (k l : ℕ) (hk : k ≥ 1) (hl : l ≥ 1) : IsRamsey (R k l) k l ∧ ∀ n < R k l, ¬ IsRamsey n k l := by
   have h : {n | IsRamsey n k l}.Nonempty := R_well_defined k l hk hl
   constructor
@@ -182,9 +152,6 @@ theorem R_spec (k l : ℕ) (hk : k ≥ 1) (hl : l ≥ 1) : IsRamsey (R k l) k l 
   · intro n hn
     exact Nat.not_mem_of_lt_sInf hn
 
-/-
-If there is a counterexample graph on a type with n elements, then IsRamsey n k l is false.
--/
 lemma not_isRamsey_of_counterexample {n k l : ℕ} {α : Type*} [Fintype α] (h_card : Fintype.card α = n)
     (G : SimpleGraph α) (h_clique : ∀ s, ¬ G.IsNClique k s) (h_indep : ∀ t, ¬ G.IsNIndepSet l t) :
     ¬ IsRamsey n k l := by
@@ -204,9 +171,6 @@ lemma not_isRamsey_of_counterexample {n k l : ℕ} {α : Type*} [Fintype α] (h_
         simp_all +decide [ Set.Pairwise ];
         obtain ⟨ x, hx, y, hy, hxy, h ⟩ := h_indep; have := hs.1 hx hy; simp_all +decide [ SimpleGraph.adj_comm ] ;
 
-/-
-Lower bound for R(k+1, k).
--/
 theorem R_ge_add_k_sub_one (k : ℕ) (hk : 2 ≤ k) : R (k + 1) k ≥ R k k + k - 1 := by
   -- Let's construct the graph $G$ as the join of $G_1$ and $G_2$.
   obtain ⟨G1, hG1⟩ : ∃ G1 : SimpleGraph (Fin (R k k - 1)), (∀ s : Finset (Fin (R k k - 1)), ¬ G1.IsNClique k s) ∧ (∀ t : Finset (Fin (R k k - 1)), ¬ G1.IsNIndepSet k t) := by
@@ -297,9 +261,6 @@ theorem R_ge_add_k_sub_one (k : ℕ) (hk : 2 ≤ k) : R (k + 1) k ≥ R k k + k 
       simp_all +decide [ SimpleGraph.IsIndepSet, Set.Pairwise ];
   omega
 
-/-
-R(k, k) is at least 1 for k >= 1.
--/
 lemma R_ge_one (k : ℕ) (hk : k ≥ 1) : R k k ≥ 1 := by
   have := @R_spec k k hk hk;
   contrapose! this; aesop;
@@ -312,9 +273,7 @@ lemma R_ge_one (k : ℕ) (hk : k ≥ 1) : R k k ≥ 1 := by
       cases a ; aesop;
     exact h_empty _ |>.2 ⟨ w, h ⟩
 
-/-
-The ratio R(k+1, k) / R(k, k) is eventually at least 1.
--/
+
 lemma ratio_ge_one_eventually : ∀ᶠ k in Filter.atTop, 1 ≤ (R (k+1) k : ℝ) / R k k := by
   -- By combining the results from R_ge_add_k_sub_one and R_ge_one, we can conclude that for k ≥ 2, the ratio R(k+1, k) / R(k, k) is at least 1.
   have h_ratio : ∀ k ≥ 2, 1 ≤ (R (k + 1) k : ℝ) / (R k k : ℝ) := by
@@ -327,7 +286,4 @@ lemma ratio_ge_one_eventually : ∀ᶠ k in Filter.atTop, 1 ≤ (R (k+1) k : ℝ
     rw [ one_le_div ] <;> norm_cast at * ; linarith [ R_ge_one k ( by linarith ) ];
   exact Filter.eventually_atTop.mpr ⟨ 2, h_ratio ⟩
 
-/-
-Checking the type of Filter.liminf_le_liminf_of_le
--/
 #check Filter.liminf_le_liminf_of_le
