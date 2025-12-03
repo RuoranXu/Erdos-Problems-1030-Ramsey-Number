@@ -1,4 +1,4 @@
-# Erdos-Problems-1030-Ramsey-Number
+# ErdosProblems-1030-RamseyNumber
 
 The Ramsey number is one of the important functions in graph theory.
 Code mainly fouces on lower bound estimation and proportional convergence.
